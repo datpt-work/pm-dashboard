@@ -1,0 +1,506 @@
+<title>Tiến Độ Dự Án Anten Radar</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500&display=swap">
+<style>
+/* === TOKENS === */
+:root {
+  --bg: #07101F;
+  --surf: #0D1A2D;
+  --surf2: #142338;
+  --border: #1C3050;
+  --fg: #D8E8F8;
+  --muted: #5A7A9A;
+  --dim: #2C4A6A;
+  --accent: #38BDF8;
+  color-scheme: dark;
+
+  --c-init: #60A5FA;
+  --c-plan: #A78BFA;
+  --c-exec: #34D399;
+  --c-mc:   #FBBF24;
+  --c-cls:  #F87171;
+
+  --s-done:     #34D399;
+  --s-progress: #FBBF24;
+  --s-todo:     #334D6A;
+
+  --ff-head: 'Space Grotesk', system-ui, sans-serif;
+  --ff-body: 'Inter', system-ui, sans-serif;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #EEF4FC; --surf: #FFFFFF; --surf2: #E0EAF8;
+    --border: #BDD0E8; --fg: #0D1A2D; --muted: #5A7A9A;
+    --dim: #BCCFE8; --accent: #0284C7; color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #EEF4FC; --surf: #FFFFFF; --surf2: #E0EAF8;
+  --border: #BDD0E8; --fg: #0D1A2D; --muted: #5A7A9A;
+  --dim: #BCCFE8; --accent: #0284C7; color-scheme: light;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--ff-body);
+  background: var(--bg);
+  color: var(--fg);
+  padding-left: max(16px, env(safe-area-inset-left,0px));
+  padding-right: max(16px, env(safe-area-inset-right,0px));
+  padding-block: 20px 36px;
+  min-height: 100%;
+  font-size: 14px;
+}
+
+/* HEADER */
+.page-header {
+  display: flex; flex-wrap: wrap; align-items: flex-start;
+  gap: 12px 24px; margin-bottom: 24px;
+}
+.page-header .title-block { flex: 1; min-width: 200px; }
+.page-header h1 {
+  font-family: var(--ff-head); font-size: clamp(16px, 3vw, 22px);
+  font-weight: 700; color: var(--fg); line-height: 1.25;
+  text-wrap: balance;
+}
+.page-header .meta {
+  font-size: 12px; color: var(--muted); margin-top: 4px;
+  display: flex; flex-wrap: wrap; gap: 6px 16px;
+}
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--ff-head); font-size: 11px; font-weight: 600;
+  padding: 3px 10px; border-radius: 20px; white-space: nowrap;
+}
+.badge-deadline {
+  background: color-mix(in srgb, var(--c-cls) 15%, transparent);
+  color: var(--c-cls); border: 1px solid color-mix(in srgb, var(--c-cls) 30%, transparent);
+}
+.badge-course {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+/* QUICK STATS */
+.stats-row {
+  display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;
+}
+.stat-card {
+  background: var(--surf); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 16px;
+  flex: 1; min-width: 110px;
+}
+.stat-card .label { font-size: 11px; color: var(--muted); font-weight: 500; letter-spacing: .04em; text-transform: uppercase; }
+.stat-card .value {
+  font-family: var(--ff-head); font-size: 26px; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px; line-height: 1;
+}
+.stat-card .sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+/* SECTION */
+.section { margin-bottom: 20px; }
+.section-title {
+  font-family: var(--ff-head); font-size: 13px; font-weight: 600;
+  color: var(--muted); letter-spacing: .07em; text-transform: uppercase;
+  margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+}
+.section-title::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+
+/* GANTT */
+.gantt-wrap { overflow-x: auto; }
+.gantt {
+  min-width: 680px;
+  display: grid;
+  grid-template-columns: 190px 1fr;
+  background: var(--surf);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.gantt-corner { background: var(--surf2); border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); padding: 10px 14px; font-size: 11px; color: var(--muted); font-weight: 500; display: flex; align-items: flex-end; }
+.date-header {
+  display: grid;
+  grid-template-columns: repeat(14, 1fr);
+  background: var(--surf2);
+  border-bottom: 1px solid var(--border);
+}
+.date-cell {
+  font-size: 10px; font-weight: 600; font-variant-numeric: tabular-nums;
+  text-align: center; padding: 8px 2px 6px;
+  color: var(--muted); border-right: 1px solid var(--border); position: relative;
+}
+.date-cell.is-today { color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.date-cell.weekend { color: color-mix(in srgb, var(--muted) 60%, transparent); }
+.date-cell.is-today .today-label {
+  position: absolute; bottom: -2px; left: 50%; transform: translateX(-50%);
+  font-size: 8px; font-weight: 700; color: var(--accent); letter-spacing: .05em;
+  white-space: nowrap;
+}
+
+.phase-header-label {
+  font-size: 11px; font-weight: 700; font-family: var(--ff-head);
+  letter-spacing: .05em; text-transform: uppercase;
+  padding: 7px 14px; display: flex; align-items: center; gap: 7px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  color: var(--phase-col);
+}
+.phase-header-label::before {
+  content: ''; width: 8px; height: 8px; border-radius: 2px;
+  background: var(--phase-col); flex-shrink: 0;
+}
+.phase-header-track {
+  display: grid; grid-template-columns: repeat(14,1fr);
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--phase-col) 6%, transparent);
+}
+.phase-col-cell { border-right: 1px solid color-mix(in srgb, var(--border) 50%, transparent); }
+.phase-col-cell.is-today { background: color-mix(in srgb, var(--accent) 6%, transparent); }
+
+.task-label {
+  display: flex; align-items: center; gap: 7px;
+  padding: 6px 14px; font-size: 12px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+  min-height: 36px;
+}
+.task-label .dot {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+}
+.task-label .name { flex: 1; color: var(--fg); line-height: 1.3; }
+.task-label .assignee {
+  font-size: 10px; color: var(--muted);
+  background: var(--surf2); border-radius: 4px; padding: 1px 5px;
+  flex-shrink: 0;
+}
+
+.task-track {
+  display: grid; grid-template-columns: repeat(14, 1fr); position: relative;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+  min-height: 36px; align-items: center;
+}
+.task-track .col-bg { border-right: 1px solid color-mix(in srgb, var(--border) 40%, transparent); height: 100%; }
+.task-track .col-bg.is-today { background: color-mix(in srgb, var(--accent) 5%, transparent); }
+.gantt-bar {
+  position: absolute; height: 20px; border-radius: 5px;
+  /* left/width set by JS */
+  display: flex; align-items: center; padding: 0 6px;
+  font-size: 10px; font-weight: 600; white-space: nowrap; overflow: hidden;
+  opacity: 0.9;
+}
+.gantt-bar.done { opacity: 1; }
+.gantt-bar.progress { }
+.gantt-bar.todo { opacity: 0.5; }
+
+/* BOTTOM GRID */
+.bottom-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+}
+@media (max-width: 680px) { .bottom-grid { grid-template-columns: 1fr; } }
+
+/* KPI */
+.kpi-card {
+  background: var(--surf); border: 1px solid var(--border); border-radius: 12px; padding: 16px;
+}
+.kpi-card h3 { font-family: var(--ff-head); font-size: 13px; font-weight: 600; margin-bottom: 14px; }
+.kpi-item { margin-bottom: 13px; }
+.kpi-item:last-child { margin-bottom: 0; }
+.kpi-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
+.kpi-label { font-size: 12px; color: var(--muted); }
+.kpi-val { font-family: var(--ff-head); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.kpi-bar-bg { height: 6px; background: var(--surf2); border-radius: 3px; overflow: hidden; }
+.kpi-bar-fill { height: 100%; border-radius: 3px; transition: width .6s ease; }
+
+/* ACCEPTANCE */
+.ac-card {
+  background: var(--surf); border: 1px solid var(--border); border-radius: 12px; padding: 16px;
+  overflow: hidden;
+}
+.ac-card h3 { font-family: var(--ff-head); font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+.ac-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 7px 0; border-bottom: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+  font-size: 12px;
+}
+.ac-item:last-child { border-bottom: none; }
+.ac-icon { width: 18px; height: 18px; border-radius: 50%; border: 2px solid; flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; }
+.ac-icon.required-empty { border-color: var(--dim); }
+.ac-icon.optional-empty { border-color: color-mix(in srgb, var(--dim) 60%, transparent); }
+.ac-icon.done { border-color: var(--s-done); background: var(--s-done); }
+.ac-icon.done::after { content: '✓'; font-size: 10px; font-weight: 700; color: #000; }
+.ac-info { flex: 1; min-width: 0; }
+.ac-name { color: var(--fg); font-weight: 500; line-height: 1.35; }
+.ac-threshold { color: var(--muted); font-size: 11px; margin-top: 2px; }
+.ac-badge { font-size: 10px; font-weight: 600; padding: 1px 7px; border-radius: 10px; white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
+.ac-badge.required { background: color-mix(in srgb, var(--c-cls) 15%, transparent); color: var(--c-cls); }
+.ac-badge.optional { background: color-mix(in srgb, var(--muted) 15%, transparent); color: var(--muted); }
+
+/* PROGRESS BAR */
+.prog-wrap { background: var(--surf); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; }
+.prog-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.prog-label { font-family: var(--ff-head); font-size: 13px; font-weight: 600; }
+.prog-pct { font-family: var(--ff-head); font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--accent); }
+.prog-bar-bg { height: 10px; background: var(--surf2); border-radius: 5px; overflow: hidden; }
+.prog-bar-fill { height: 100%; border-radius: 5px; background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 70%, var(--c-exec))); transition: width .8s ease; }
+
+/* LEGEND */
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-bottom: 10px; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); }
+.legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+</style>
+
+<div class="page-header">
+  <div class="title-block">
+    <h1>Dự Án Anten Mảng Vi Dải Radar Băng X</h1>
+    <div class="meta">
+      <span>FE7318 · 20251FE7318003</span>
+      <span>PGS.TS. Tống Văn Luyên</span>
+      <span>01/11 – 14/11/2026</span>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;padding-top:4px">
+    <span class="badge badge-deadline">🎯 Hạn nộp: 14/11/2026</span>
+    <span class="badge badge-course">FE7318</span>
+  </div>
+</div>
+
+<div class="stats-row" id="statsRow"></div>
+
+<!-- OVERALL PROGRESS -->
+<div class="prog-wrap">
+  <div class="prog-row">
+    <span class="prog-label">Tiến độ tổng thể</span>
+    <span class="prog-pct" id="overallPct">0%</span>
+  </div>
+  <div class="prog-bar-bg"><div class="prog-bar-fill" id="overallBar" style="width:0%"></div></div>
+</div>
+
+<!-- GANTT CHART -->
+<div class="section">
+  <div class="section-title">Biểu đồ Gantt</div>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--c-init)"></div>Initiating</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--c-plan)"></div>Planning</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--c-exec)"></div>Executing</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--c-mc)"></div>M&amp;C</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--c-cls)"></div>Closing</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--s-done);border-radius:50%"></div>Hoàn thành</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--s-progress);border-radius:50%"></div>Đang làm</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--s-todo);border-radius:50%"></div>Chưa bắt đầu</div>
+  </div>
+  <div class="gantt-wrap">
+    <div class="gantt" id="gantt"></div>
+  </div>
+</div>
+
+<!-- BOTTOM SECTION -->
+<div class="bottom-grid">
+  <div class="kpi-card">
+    <h3>Chỉ tiêu kỹ thuật mục tiêu</h3>
+    <div id="kpiList"></div>
+  </div>
+  <div class="ac-card">
+    <h3>Tiêu chí nghiệm thu (TC1–TC10)</h3>
+    <div id="acList"></div>
+  </div>
+</div>
+
+<script>
+const TODAY = 14; // Nov 14 = day 14
+const DAYS = Array.from({length:14},(_,i)=>i+1);
+const DATES = ['01','02','03','04','05','06','07','08','09','10','11','12','13','14'];
+// weekends in Nov 2026: Sat=07,08,14,15 -> days 7,8 are within range
+const WEEKENDS = [7,8,14]; // just the ones in range 1-14
+
+const phases = [
+  { key:'init', name:'Initiating', color:'var(--c-init)', tasks:[
+    { name:'Lập Project Charter',      start:1,  end:2,  who:'Đạt',     st:'done' },
+    { name:'Xác định Stakeholders',    start:1,  end:2,  who:'Đạt',     st:'done' },
+  ]},
+  { key:'plan', name:'Planning',    color:'var(--c-plan)', tasks:[
+    { name:'Khảo sát tài liệu anten',  start:2,  end:4,  who:'Tú',      st:'done' },
+    { name:'Xây dựng WBS',             start:2,  end:3,  who:'Đạt',     st:'done' },
+    { name:'Lập Gantt & Risk Register',start:3,  end:4,  who:'Đạt',     st:'done' },
+  ]},
+  { key:'exec', name:'Executing',   color:'var(--c-exec)', tasks:[
+    { name:'Thiết kế patch đơn (HFSS)',start:5,  end:7,  who:'Tú',      st:'done' },
+    { name:'Tối ưu patch đơn',         start:7,  end:9,  who:'Tú',      st:'done' },
+    { name:'Thiết kế mảng 2×4',        start:9,  end:11, who:'Tú',      st:'progress' },
+    { name:'Tối ưu mảng (Gain, HPBW)', start:11, end:13, who:'Tú',      st:'progress' },
+    { name:'Viết Chương 1',            start:5,  end:7,  who:'Nam',     st:'done' },
+    { name:'Viết Chương 2',            start:7,  end:10, who:'Đạt',     st:'done' },
+    { name:'Viết Chương 3',            start:10, end:12, who:'Nam',     st:'progress' },
+  ]},
+  { key:'mc',   name:'Monitoring & Controlling', color:'var(--c-mc)', tasks:[
+    { name:'Cập nhật KPI & Task Board',start:1,  end:14, who:'Đạt',     st:'progress' },
+  ]},
+  { key:'cls',  name:'Closing',     color:'var(--c-cls)', tasks:[
+    { name:'Hoàn thiện báo cáo + Slide',start:12,end:13, who:'Cả nhóm', st:'progress' },
+    { name:'Nộp hồ sơ đúng hạn',       start:14,end:14, who:'Đạt',     st:'todo' },
+  ]},
+];
+
+// STATUS colors
+const stColor = { done:'var(--s-done)', progress:'var(--s-progress)', todo:'var(--s-todo)' };
+
+// BUILD GANTT
+const gantt = document.getElementById('gantt');
+
+// Corner
+const corner = document.createElement('div');
+corner.className = 'gantt-corner';
+corner.textContent = 'Nhiệm vụ';
+gantt.appendChild(corner);
+
+// Date header
+const dh = document.createElement('div');
+dh.className = 'date-header';
+DAYS.forEach(d => {
+  const cell = document.createElement('div');
+  cell.className = 'date-cell' + (d===TODAY?' is-today':'') + (WEEKENDS.includes(d)?' weekend':'');
+  cell.textContent = DATES[d-1];
+  if(d===TODAY){
+    const lbl = document.createElement('span');
+    lbl.className = 'today-label';
+    lbl.textContent = 'TODAY';
+    cell.appendChild(lbl);
+  }
+  dh.appendChild(cell);
+});
+gantt.appendChild(dh);
+
+let totalTasks=0, doneTasks=0;
+
+phases.forEach(ph => {
+  // Phase header label
+  const phl = document.createElement('div');
+  phl.className = 'phase-header-label';
+  phl.style.setProperty('--phase-col', ph.color);
+  phl.textContent = ph.name;
+  gantt.appendChild(phl);
+
+  // Phase header track
+  const pht = document.createElement('div');
+  pht.className = 'phase-header-track';
+  pht.style.setProperty('--phase-col', ph.color);
+  DAYS.forEach(d=>{
+    const c=document.createElement('div');
+    c.className='phase-col-cell'+(d===TODAY?' is-today':'');
+    pht.appendChild(c);
+  });
+  gantt.appendChild(pht);
+
+  // Tasks
+  ph.tasks.forEach(task => {
+    totalTasks++;
+    if(task.st==='done') doneTasks++;
+
+    // Label
+    const tl = document.createElement('div');
+    tl.className = 'task-label';
+    tl.innerHTML = `<div class="dot" style="background:${stColor[task.st]}"></div>
+      <span class="name">${task.name}</span>
+      <span class="assignee">${task.who}</span>`;
+    gantt.appendChild(tl);
+
+    // Track
+    const tt = document.createElement('div');
+    tt.className = 'task-track';
+
+    // column backgrounds
+    DAYS.forEach(d=>{
+      const cb=document.createElement('div');
+      cb.className='col-bg'+(d===TODAY?' is-today':'');
+      cb.style.gridColumn=d;
+      tt.appendChild(cb);
+    });
+
+    // Bar
+    const bar = document.createElement('div');
+    bar.className = 'gantt-bar ' + task.st;
+    // position using percentages of the 14-col grid
+    const colW = 100/14;
+    const left = (task.start-1)*colW;
+    const width = (task.end - task.start + 1)*colW;
+    bar.style.left = left+'%';
+    bar.style.width = `calc(${width}% - 4px)`;
+    bar.style.marginLeft = '2px';
+    bar.style.background = ph.color;
+    if(task.st==='done') bar.style.background = ph.color;
+    if(task.st==='progress') bar.style.background = `linear-gradient(90deg,${ph.color},color-mix(in srgb,${ph.color} 60%,transparent))`;
+    if(task.st==='todo') bar.style.background = 'var(--s-todo)';
+    tt.appendChild(bar);
+    gantt.appendChild(tt);
+  });
+});
+
+// STATS
+const daysLeft = Math.max(0, TODAY - TODAY); // today IS deadline
+const pct = Math.round((doneTasks/totalTasks)*100);
+document.getElementById('overallPct').textContent = pct+'%';
+document.getElementById('overallBar').style.width = pct+'%';
+
+const stats = [
+  { label:'Tổng nhiệm vụ', value: totalTasks, sub:'tasks', color:'var(--accent)' },
+  { label:'Hoàn thành',    value: doneTasks,  sub:'tasks', color:'var(--s-done)' },
+  { label:'Đang thực hiện',value: phases.flatMap(p=>p.tasks).filter(t=>t.st==='progress').length, sub:'tasks', color:'var(--s-progress)' },
+  { label:'Tiến độ',       value: pct+'%',    sub:'tổng thể', color:'var(--accent)' },
+  { label:'Thành viên',    value: 3,          sub:'Đạt · Tú · Nam', color:'var(--c-plan)' },
+];
+const sr = document.getElementById('statsRow');
+stats.forEach(s=>{
+  sr.innerHTML += `<div class="stat-card">
+    <div class="label">${s.label}</div>
+    <div class="value" style="color:${s.color}">${s.value}</div>
+    <div class="sub">${s.sub}</div>
+  </div>`;
+});
+
+// KPI ITEMS
+const kpis = [
+  { label:'S11 tại 10 GHz', target:'≤ −10 dB',  unit:'dB',  targetVal:-10, currentVal:null, pct:60, color:'var(--c-exec)' },
+  { label:'Gain (Hệ số tăng ích)', target:'≥ 15 dBi', unit:'dBi', targetVal:15,   currentVal:null, pct:55, color:'var(--c-exec)' },
+  { label:'HPBW (Độ rộng búp sóng)', target:'≤ 15°',  unit:'°',   targetVal:15,   currentVal:null, pct:65, color:'var(--c-exec)' },
+  { label:'Băng thông', target:'≥ 500 MHz', unit:'MHz',targetVal:500,  currentVal:null, pct:50, color:'var(--c-exec)' },
+];
+const kl = document.getElementById('kpiList');
+kpis.forEach(k=>{
+  kl.innerHTML += `<div class="kpi-item">
+    <div class="kpi-row">
+      <span class="kpi-label">${k.label}</span>
+      <span class="kpi-val" style="color:${k.color}">${k.target}</span>
+    </div>
+    <div class="kpi-bar-bg"><div class="kpi-bar-fill" style="width:${k.pct}%;background:${k.color}"></div></div>
+    <div style="font-size:11px;color:var(--muted);margin-top:3px">Mô phỏng HFSS — kết quả cập nhật sau khi chạy</div>
+  </div>`;
+});
+
+// ACCEPTANCE CRITERIA
+const acs = [
+  { id:'TC1', name:'S11 tại 10 GHz ≤ −10 dB',           threshold:'≤ −10 dB',      required:true,  done:false },
+  { id:'TC2', name:'Gain ≥ 15 dBi',                      threshold:'≥ 15 dBi',       required:true,  done:false },
+  { id:'TC3', name:'HPBW ≤ 15°',                         threshold:'≤ 15°',          required:true,  done:false },
+  { id:'TC4', name:'Băng thông ≥ 500 MHz quanh 10 GHz', threshold:'≥ 500 MHz',      required:true,  done:false },
+  { id:'TC5', name:'Phân cực thẳng, cross-pol < −15 dB', threshold:'cross-pol ≥ 15 dB thấp hơn',required:false, done:false },
+  { id:'TC6', name:'Nộp đúng hạn 14/11/2026',            threshold:'Trước 23:59',    required:true,  done:false },
+  { id:'TC7', name:'Trễ Gantt ≤ 1 ngày/mốc',            threshold:'≤ 1 ngày',       required:false, done:false },
+  { id:'TC8', name:'Báo cáo đủ 3 chương PMBOK',          threshold:'5 nhóm quy trình',required:true, done:true  },
+  { id:'TC9', name:'Hồ sơ bàn giao đủ 5 hạng mục',      threshold:'Báo cáo+Slide+HFSS+Notion',required:true, done:false },
+  { id:'TC10',name:'Trích dẫn ≥ 5 nguồn',               threshold:'≥ 5 nguồn',      required:false, done:true  },
+];
+const al = document.getElementById('acList');
+acs.forEach(a=>{
+  const iconCls = a.done ? 'done' : (a.required ? 'required-empty' : 'optional-empty');
+  al.innerHTML += `<div class="ac-item">
+    <div class="ac-icon ${iconCls}"></div>
+    <div class="ac-info">
+      <div class="ac-name">${a.id} — ${a.name}</div>
+      <div class="ac-threshold">${a.threshold}</div>
+    </div>
+    <span class="ac-badge ${a.required?'required':'optional'}">${a.required?'Bắt buộc':'Mong muốn'}</span>
+  </div>`;
+});
+</script>
